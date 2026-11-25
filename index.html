@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ระบบเรียกคิว • สำนักงานสรรพากรพื้นที่สาขาบัวใหญ่ (Buayai - RD)</title>
 
-    <!-- ฟอนต์ภาษาไทยมาตรฐานสำหรับหน้าจอแสดงผลและระบบปฏิบัติการ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,7 +12,6 @@
         rel="stylesheet"
     />
 
-    <!-- Tailwind CSS CDN พร้อม Error Fallback ด้านล่าง -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         if (window.tailwind) {
@@ -47,7 +45,6 @@
     </script>
 
     <style>
-        /* สไตล์พื้นฐานสำรองกรณี CDN โหลดช้าหรือถูกบล็อก */
         :root {
             --bg-page: #EAF4FC;
             --text-main: #0F2942;
@@ -63,7 +60,6 @@
             color: var(--text-main);
         }
 
-        /* พื้นหลังลายน้ำสระดอกบัวสำหรับหน้าจอแสดงผลคิว */
         .lotus-pond-bg {
             position: relative;
             isolation: isolate;
@@ -84,7 +80,6 @@
             z-index: 2;
         }
 
-        /* การ์ดแสดงผลคิวบนหน้าจอ 21 นิ้ว */
         .tv-queue-card {
             background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(8px);
@@ -98,7 +93,6 @@
             box-shadow: 0 22px 48px -12px rgba(2, 132, 199, 0.28);
         }
 
-        /* เอฟเฟกต์หมายเลขคิว */
         @keyframes queuePopIn {
             0% {
                 transform: scale(0.84) translateY(10px);
@@ -137,7 +131,6 @@
             animation: queuePopIn 0.55s cubic-bezier(0.22, 1, 0.36, 1), queuePulseGlow 2.8s ease-in-out infinite 0.55s;
         }
 
-        /* แถบตัวอักษรวิ่งด้านล่างหน้าจอแสดงผล */
         @keyframes marqueeScroll {
             0% {
                 transform: translateX(0%);
@@ -159,11 +152,9 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-slate-900 selection:bg-skybrand-200 selection:text-navy-900">
-    <!-- แถบนำทางด้านบนและส่วนเนื้อหาหลัก -->
     <div id="topBarContainer"></div>
     <main id="appMain" class="flex-1 w-full"></main>
 
-    <!-- หน้าต่างยืนยันการทำรายการ (แทนการใช้ confirm()) -->
     <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/55 backdrop-blur-xs p-4">
         <div class="bg-white rounded-3xl border border-skybrand-200 shadow-2xl max-w-md w-full p-6 space-y-5">
             <div class="space-y-1.5">
@@ -189,19 +180,15 @@
         </div>
     </div>
 
-    <!-- ข้อความแจ้งเตือนมุมขวาบน -->
     <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
     <script>
-        /* =====================================================================
-         * ค่าคงที่หลักและโครงสร้างระบบเรียกคิว สำนักงานสรรพากรพื้นที่สาขาบัวใหญ่
-         * ===================================================================== */
         const TOTAL_TICKETS = 50;
         const STORAGE_STATE_KEY = 'buayai_rd_queue_state_v1';
         const STORAGE_LOGS_KEY = 'buayai_rd_queue_logs_v1';
         const STORAGE_SETTINGS_KEY = 'buayai_rd_queue_settings_v1';
 
-        const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7ZdnNHdYTHRDXiNuH3ZJBsLRv1JvIIvZliGyOF4_ASk5Qy5VzcKv_AygJemzOesf9rw/exec';
+        const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwR4rakHiT487ZtAGZmpAhf1yYy5E-1puiiFb0mgX0-ADQW7RJ-fUy2t4w8y8xWoWkp/exec';
 
         const COUNTERS_CONFIG = [
             { id: 1, name: 'ช่องบริการ 1', subtitle: 'บริการทั่วไป', type: 'normal', specialRoom: '' },
@@ -282,9 +269,6 @@
                 .replace(/'/g, '&#39;');
         }
 
-        /* =====================================================================
-         * การอ่านพารามิเตอร์ URL (?view=..., ?counter=...)
-         * ===================================================================== */
         function readInitialUrlParams() {
             let view = 'tv';
             let counter = 1;
@@ -317,7 +301,7 @@
                 counterStaff,
                 voice: {
                     enabled: true,
-                    mode: 'auto', // 'auto' | 'speech' | 'online'
+                    mode: 'auto',
                     rate: 0.96,
                     pitch: 1.0,
                     volume: 1.0,
@@ -332,9 +316,9 @@
             for (let i = 1; i <= TOTAL_TICKETS; i++) {
                 tickets[i] = {
                     number: i,
-                    status: 'available', // 'available' | 'waiting' | 'serving' | 'hold'
+                    status: 'available',
                     servedToday: false,
-                    type: 'normal', // 'normal' | 'special'
+                    type: 'normal',
                     targetCounterId: null,
                     note: '',
                     logId: null,
@@ -453,7 +437,6 @@
         let appState = loadStateFromStorage();
         let issueLogs = loadLogsFromStorage();
 
-        // บังคับให้หน้าจอแสดงผลคิว (?view=tv) เปิดเสียงประกาศเสมอตั้งแต่เริ่มต้น
         if (initialParams.view === 'tv') {
             appSettings.voice.enabled = true;
         }
@@ -462,15 +445,15 @@
             currentView: initialParams.view,
             activeCounterId: initialParams.counter,
             audioEnabled: initialParams.view === 'tv' ? true : Boolean(appSettings.voice.enabled),
-            syncStatus: 'local', // 'local' | 'syncing' | 'connected' | 'error'
+            syncStatus: 'local',
             syncMessage: 'พร้อมใช้งาน',
             lastAnnouncedKey: null,
             dismissedIssueEventKey: null,
             mobileSelectedNumber: null,
-            mobileServiceType: 'normal', // 'normal' | 'special'
+            mobileServiceType: 'normal',
             mobileTargetCounter: '',
             mobileNote: '',
-            reportTab: 'daily', // 'daily' | 'monthly'
+            reportTab: 'daily',
             selectedReportDate: getDateKey(),
             selectedReportMonth: getMonthKey(),
             customCallNumber: '',
@@ -492,9 +475,6 @@
             }
         }
 
-        /* =====================================================================
-         * ระบบแจ้งเตือนและหน้าต่างยืนยัน
-         * ===================================================================== */
         function showToast(message, variant = 'info') {
             const container = document.getElementById('toastContainer');
             if (!container) return;
@@ -552,9 +532,6 @@
             pendingConfirmCallback = null;
         }
 
-        /* =====================================================================
-         * ระบบเสียงกระดิ่งและเสียงประกาศภาษาไทย 100% (Web Speech API + เสียงออนไลน์สำรอง)
-         * ===================================================================== */
         let audioCtxInstance = null;
         let activeFallbackAudio = null;
         let speechPlaybackQueue = Promise.resolve();
@@ -562,11 +539,6 @@
 
         const THAI_DIGIT_WORDS = ['ศูนย์', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
 
-        /**
-         * แปลงตัวเลขเป็นคำอ่านภาษาไทยอย่างชัดเจน ป้องกันการอ่านข้ามหรืออ่านเป็นภาษาอื่น
-         * @param {number|string} rawNum
-         * @return {string}
-         */
         function numberToSpokenThai(rawNum) {
             const n = Math.floor(Math.abs(Number(rawNum) || 0));
             if (n === 0) return 'ศูนย์';
@@ -608,7 +580,6 @@
                     return [];
                 }
                 const allVoices = window.speechSynthesis.getVoices() || [];
-                // คัดกรองเฉพาะเสียงภาษาไทยแท้ (th-TH / th) เท่านั้น ไม่ปะปนภาษาอื่น
                 availableThaiVoices = allVoices.filter(v => {
                     const lang = String(v.lang || '').trim().toLowerCase();
                     return lang === 'th-th' || lang === 'th' || lang.startsWith('th-');
@@ -930,9 +901,6 @@
             await speakThaiAnnouncement(buildAnnouncementText(sampleTicket, sampleCounter));
         }
 
-        /* =====================================================================
-         * การซิงค์ข้อมูลกับ Google Apps Script / Google Sheets
-         * ===================================================================== */
         function getActiveAppsScriptUrl() {
             const configured = (appSettings.appsScriptUrl || '').trim();
             return configured || DEFAULT_APPS_SCRIPT_URL;
@@ -1077,9 +1045,6 @@
             }
         }
 
-        /* =====================================================================
-         * ตรรกะการจัดการคิว การออกบัตร การเรียกคิว และการคืนบัตร
-         * ===================================================================== */
         function checkIncomingAnnouncementAndEvents() {
             const ann = appState.lastAnnouncement;
             if (ann && ann.key && ann.key !== uiState.lastAnnouncedKey) {
@@ -1194,7 +1159,6 @@
             const cId = Number(counterId);
             const cfg = getCounterConfig(cId);
 
-            // ค้นหาคิวรอเรียกที่ระบุช่องปลายทางตรงกับช่องนี้ก่อน
             const targetedIdx = appState.waitingQueue.findIndex(num => {
                 const t = appState.tickets[num];
                 return t && t.status === 'waiting' && Number(t.targetCounterId) === cId;
@@ -1204,7 +1168,6 @@
                 return chosen;
             }
 
-            // หากเป็นช่อง 9 ให้ดูคิวประเภทพิเศษที่ไม่ได้ระบุช่องอื่นก่อน
             if (cfg.type === 'special') {
                 const specialIdx = appState.waitingQueue.findIndex(num => {
                     const t = appState.tickets[num];
@@ -1216,7 +1179,6 @@
                 }
             }
 
-            // ค้นหาคิวรอเรียกทั่วไปหรือคิวที่ไม่ได้ระบุช่องอื่น
             const generalIdx = appState.waitingQueue.findIndex(num => {
                 const t = appState.tickets[num];
                 if (!t || t.status !== 'waiting') return false;
@@ -1229,7 +1191,6 @@
                 return chosen;
             }
 
-            // หากไม่มีคิวที่ตรงเงื่อนไขเฉพาะ ให้หยิบคิวแรกที่รอเรียกอยู่
             while (appState.waitingQueue.length > 0) {
                 const candidate = appState.waitingQueue.shift();
                 const t = appState.tickets[candidate];
@@ -1251,7 +1212,6 @@
             const ticket = appState.tickets[num];
             if (!ticket) return;
 
-            // หากช่องนี้มีคิวเดิมกำลังให้บริการอยู่ ให้คืนบัตรเดิมเข้าสถานะว่างพร้อมบันทึกว่าให้บริการแล้วเสร็จ
             const counterObj = appState.counters[cId];
             const logUpdates = [];
             const now = Date.now();
@@ -1411,12 +1371,6 @@
             await syncStateToSheet(null, logUpdates.length > 0 ? logUpdates : null, null);
         }
 
-        /**
-         * โอนคิวที่กำลังให้บริการจากช่องปัจจุบันไปยังช่องบริการอื่น (1-9)
-         * หลังโอนสำเร็จ สถานะของช่องผู้โอนจะถูกล้างเป็นว่าง (ไม่มีคิวนี้ค้างอยู่ที่ผู้โอน)
-         * @param {number} fromCounterId
-         * @param {number|string} toCounterIdRaw
-         */
         async function transferTicketToCounter(fromCounterId, toCounterIdRaw) {
             const sourceId = Number(fromCounterId);
             const targetId = Number(toCounterIdRaw);
@@ -1444,12 +1398,10 @@
                 return;
             }
 
-            const now = Date.now();
             const targetCfg = getCounterConfig(targetId);
             const sourceCfg = getCounterConfig(sourceId);
             const transferNote = `โอนจาก${sourceCfg.name} ไป${targetCfg.name}`;
 
-            // ล้างสถานะคิวออกจากช่องผู้โอนทันที (ผู้โอนไม่มีคิวนี้ค้างอยู่)
             appState.counters[sourceId] = {
                 ...appState.counters[sourceId],
                 id: sourceId,
@@ -1457,7 +1409,6 @@
                 isBusy: false
             };
 
-            // เปลี่ยนสถานะบัตรกลับเป็นรอเรียก (waiting) และระบุช่องบริการปลายทางใหม่
             ticket.status = 'waiting';
             ticket.counterId = null;
             ticket.calledAt = null;
@@ -1465,7 +1416,6 @@
             ticket.type = targetCfg.type === 'special' ? 'special' : 'normal';
             ticket.note = ticket.note ? `${ticket.note} • ${transferNote}` : transferNote;
 
-            // จัดคิวที่โอนให้อยู่ลำดับต้นของคิวรอเรียกเพื่อรับบริการต่อเนื่องที่ช่องปลายทาง
             appState.waitingQueue = appState.waitingQueue.filter(n => n !== currentNum);
             appState.waitingQueue.unshift(currentNum);
 
@@ -1491,6 +1441,65 @@
             renderApp();
             showToast(
                 `โอนคิวหมายเลข ${currentNum} จากช่อง ${sourceId} ไปยัง ${formatCounterDestination(targetId)} แล้ว (ช่อง ${sourceId} ไม่มีคิวค้าง)`,
+                'success'
+            );
+            await syncStateToSheet(null, logUpdates.length > 0 ? logUpdates : null, null);
+        }
+
+        async function returnTicketToPool(ticketNumber, markCompleted = true) {
+            const num = Number(ticketNumber);
+            const ticket = appState.tickets[num];
+            if (!ticket) return;
+
+            const now = Date.now();
+            const cId = ticket.counterId ? Number(ticket.counterId) : null;
+            const logUpdates = [];
+
+            if (ticket.logId) {
+                const idx = issueLogs.findIndex(l => l.id === ticket.logId);
+                const nextLogStatus = markCompleted ? 'completed' : 'returned';
+                if (idx !== -1) {
+                    issueLogs[idx].status = nextLogStatus;
+                    issueLogs[idx].completedAt = now;
+                    if (cId) issueLogs[idx].servedCounterId = cId;
+                }
+                logUpdates.push({
+                    id: ticket.logId,
+                    fields: {
+                        status: nextLogStatus,
+                        completedAt: now,
+                        servedCounterId: cId
+                    }
+                });
+            }
+
+            COUNTERS_CONFIG.forEach(c => {
+                if (appState.counters[c.id] && Number(appState.counters[c.id].currentTicket) === num) {
+                    appState.counters[c.id].currentTicket = null;
+                }
+            });
+
+            appState.waitingQueue = appState.waitingQueue.filter(n => n !== num);
+
+            ticket.status = 'available';
+            ticket.servedToday = markCompleted ? true : Boolean(ticket.servedToday);
+            ticket.type = 'normal';
+            ticket.targetCounterId = null;
+            ticket.note = '';
+            ticket.logId = null;
+            ticket.counterId = null;
+            ticket.issuedAt = null;
+            ticket.calledAt = null;
+
+            if (uiState.mobileSelectedNumber === num) {
+                uiState.mobileSelectedNumber = null;
+            }
+
+            renderApp();
+            showToast(
+                markCompleted
+                    ? `เสร็จสิ้นบริการหมายเลข ${num} และคืนบัตรเข้าสู่สถานะว่างแล้ว`
+                    : `คืนบัตรหมายเลข ${num} เข้าสู่สถานะว่างแล้ว`,
                 'success'
             );
             await syncStateToSheet(null, logUpdates.length > 0 ? logUpdates : null, null);
@@ -1577,9 +1586,6 @@
             );
         }
 
-        /* =====================================================================
-         * การนำทางและสลับมุมมองหน้าจอ
-         * ===================================================================== */
         function switchView(viewName, counterId = null) {
             if (!VALID_VIEWS.includes(viewName)) return;
             uiState.currentView = viewName;
@@ -1612,9 +1618,6 @@
             }
         }
 
-        /* =====================================================================
-         * ส่วนติดต่อผู้ใช้: แถบนำทางด้านบน (ซ่อนในโหมดหน้าจอแสดงผลคิว TV)
-         * ===================================================================== */
         function renderTopBar() {
             const container = document.getElementById('topBarContainer');
             if (!container) return;
@@ -1684,25 +1687,19 @@
             `;
         }
 
-        /* =====================================================================
-         * มุมมองที่ 1: หน้าจอแสดงผลคิวขนาดใหญ่สำหรับจอ 21 นิ้ว (?view=tv)
-         * ===================================================================== */
         function renderLotusPondWatermarkSVG() {
             return `
                 <svg class="w-full h-full" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <!-- ระลอกคลื่นสระน้ำ -->
                     <ellipse cx="720" cy="520" rx="640" ry="260" fill="none" stroke="#0284C7" stroke-width="2.5" opacity="0.45" />
                     <ellipse cx="720" cy="520" rx="510" ry="200" fill="none" stroke="#0369A1" stroke-width="2" opacity="0.35" />
                     <ellipse cx="720" cy="520" rx="370" ry="140" fill="none" stroke="#0284C7" stroke-width="1.8" opacity="0.3" />
                     <path d="M 120 690 Q 380 655 650 690 T 1280 680" fill="none" stroke="#0284C7" stroke-width="2.5" opacity="0.4" />
                     <path d="M 180 745 Q 470 715 760 745 T 1320 735" fill="none" stroke="#0369A1" stroke-width="2" opacity="0.32" />
 
-                    <!-- ใบบัวขนาดใหญ่ -->
                     <ellipse cx="260" cy="610" rx="145" ry="52" fill="#BAE6FD" stroke="#0284C7" stroke-width="2.5" />
                     <ellipse cx="1185" cy="625" rx="155" ry="56" fill="#BAE6FD" stroke="#0284C7" stroke-width="2.5" />
                     <ellipse cx="720" cy="765" rx="185" ry="54" fill="#BAE6FD" stroke="#0369A1" stroke-width="2.5" />
 
-                    <!-- ดอกบัวลายน้ำด้านซ้าย -->
                     <g transform="translate(260, 540)">
                         <path d="M 0 18 C -36 10, -56 -16, -48 -42 C -24 -34, -8 -12, 0 18 Z" fill="#7DD3FC" stroke="#0284C7" stroke-width="2" />
                         <path d="M 0 18 C 36 10, 56 -16, 48 -42 C 24 -34, 8 -12, 0 18 Z" fill="#7DD3FC" stroke="#0284C7" stroke-width="2" />
@@ -1710,7 +1707,6 @@
                         <ellipse cx="0" cy="12" rx="14" ry="7" fill="#FDE68A" stroke="#D97706" stroke-width="1.5" />
                     </g>
 
-                    <!-- ดอกบัวลายน้ำด้านขวา -->
                     <g transform="translate(1185, 550)">
                         <path d="M 0 18 C -38 10, -58 -18, -50 -44 C -25 -35, -8 -12, 0 18 Z" fill="#7DD3FC" stroke="#0284C7" stroke-width="2" />
                         <path d="M 0 18 C 38 10, 58 -18, 50 -44 C 25 -35, 8 -12, 0 18 Z" fill="#7DD3FC" stroke="#0284C7" stroke-width="2" />
@@ -1718,7 +1714,6 @@
                         <ellipse cx="0" cy="12" rx="15" ry="7" fill="#FDE68A" stroke="#D97706" stroke-width="1.5" />
                     </g>
 
-                    <!-- ดอกบัวลายน้ำมุมบนซ้ายและมุมบนขวาจางๆ -->
                     <g transform="translate(150, 175) scale(0.75)">
                         <path d="M 0 18 C -34 10, -52 -14, -44 -38 C -22 -30, -8 -10, 0 18 Z" fill="#BAE6FD" stroke="#0284C7" stroke-width="2" />
                         <path d="M 0 18 C 34 10, 52 -14, 44 -38 C 22 -30, 8 -10, 0 18 Z" fill="#BAE6FD" stroke="#0284C7" stroke-width="2" />
@@ -1870,7 +1865,6 @@
                     </div>
 
                     <div class="lotus-content-layer flex-1 flex flex-col justify-between min-h-screen">
-                        <!-- แถบหัวมุมด้านบนหน้าจอแสดงผล -->
                         <div class="w-full px-4 sm:px-8 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
                             <div class="flex items-center gap-3">
                                 <span class="px-3 py-1 rounded-full bg-white/90 border border-skybrand-200 text-navy-900 font-display font-extrabold text-xs sm:text-sm shadow-2xs">
@@ -1899,7 +1893,6 @@
 
                         ${stageHTML}
 
-                        <!-- แถบตัวอักษรวิ่งด้านล่าง -->
                         <div class="w-full bg-navy-900 text-white border-t border-navy-800 py-2.5 overflow-hidden">
                             <div class="marquee-track font-display font-bold text-base sm:text-xl tracking-wide">
                                 <span class="mx-8">${escapeHTML(tickerMessage)}</span>
@@ -1911,9 +1904,6 @@
             `;
         }
 
-        /* =====================================================================
-         * มุมมองที่ 2: คอมพิวเตอร์เจ้าหน้าที่ประจำช่องบริการ 1–9 (?view=counter)
-         * ===================================================================== */
         function renderCounterConsoleHTML() {
             const cId = Number(uiState.activeCounterId || 1);
             const cfg = getCounterConfig(cId);
@@ -1975,7 +1965,6 @@
 
             return `
                 <section class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-                    <!-- แถบเลือกช่องบริการ 1–9 -->
                     <div class="bg-white rounded-3xl border border-skybrand-200 p-4 shadow-2xs">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                             <div>
@@ -1997,7 +1986,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <!-- แผงควบคุมหลักของช่องบริการที่เลือก -->
                         <div class="lg:col-span-7 bg-white rounded-3xl border border-skybrand-200 p-6 shadow-2xs space-y-6">
                             <div class="flex flex-wrap items-start justify-between gap-4 pb-4 border-b border-skybrand-100">
                                 <div>
@@ -2021,7 +2009,6 @@
                                 </button>
                             </div>
 
-                            <!-- คิวที่กำลังเรียก / ให้บริการอยู่ -->
                             <div class="rounded-3xl bg-skybrand-50/70 border border-skybrand-200 p-6 text-center space-y-2">
                                 <div class="text-xs font-bold uppercase tracking-wider text-slate-500">
                                     หมายเลขคิวที่กำลังเรียกในช่องนี้
@@ -2036,7 +2023,6 @@
                                 </div>
                             </div>
 
-                            <!-- ปุ่มสั่งการเรียกคิว -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <button
                                     type="button"
@@ -2068,7 +2054,6 @@
                                 </button>
                             </div>
 
-                            <!-- เรียกหมายเลขคิวเจาะจง 1–50 -->
                             <div class="pt-4 border-t border-skybrand-100">
                                 <label class="block text-xs font-bold text-slate-600 mb-2">
                                     เรียกหมายเลขคิวเจาะจง (1–50) ที่ช่องบริการ ${cId}
@@ -2094,7 +2079,6 @@
                                 </div>
                             </div>
 
-                            <!-- โอนคิวที่กำลังให้บริการไปยังช่องบริการอื่น -->
                             <div class="pt-4 border-t border-skybrand-100">
                                 <label for="transferTargetCounterSelect" class="block text-xs font-bold text-slate-600 mb-2">
                                     โอนคิวที่กำลังให้บริการอยู่ไปยังช่องบริการอื่น (หลังโอน ช่อง ${cId} จะไม่มีคิวค้าง)
@@ -2124,7 +2108,636 @@
                             </div>
                         </div>
 
-                        <!-- รายชื่อเจ้าหน้าที่ประจำช่องบริการ 1–9 -->
+                        <div class="lg:col-span-5 bg-white rounded-3xl border border-skybrand-200 p-6 shadow-2xs flex flex-col justify-between space-y-4">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-3">
+                                    <h2 class="font-display font-extrabold text-lg text-navy-900">รายการคิวรอเรียก</h2>
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-skybrand-100 text-skybrand-800 tabular-nums">
+                                        ${appState.waitingQueue.length} คิว
+                                    </span>
+                                </div>
+                                <div class="space-y-2 max-h-[460px] overflow-y-auto pr-1">
+                                    ${waitingListHTML}
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-skybrand-100 flex items-center justify-between text-xs text-slate-500">
+                                <span>ซิงค์ข้อมูลอัตโนมัติทุก 3.5 วินาที</span>
+                                <button type="button" onclick="fetchSnapshotFromSheet(false)" class="font-bold text-skybrand-700 hover:underline">
+                                    รีเฟรชข้อมูล
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderMobileIssuerHTML() {
+            const availableCount = Object.values(appState.tickets).filter(t => t.status === 'available').length;
+            const waitingCount = Object.values(appState.tickets).filter(t => t.status === 'waiting').length;
+            const servingCount = Object.values(appState.tickets).filter(t => t.status === 'serving').length;
+
+            const gridHTML = [];
+            for (let num = 1; num <= TOTAL_TICKETS; num++) {
+                const t = appState.tickets[num] || { number: num, status: 'available', servedToday: false };
+                const isSelected = uiState.mobileSelectedNumber === num;
+                const isCompletedToday = t.status === 'available' && Boolean(t.servedToday);
+
+                let btnClass = '';
+                let badgeText = 'ว่าง';
+                let iconHTML = '';
+
+                if (isSelected) {
+                    btnClass = 'bg-skybrand-600 text-white border-skybrand-700 ring-4 ring-skybrand-200 scale-[1.03]';
+                    badgeText = 'เลือกแล้ว';
+                    iconHTML = '<span class="text-xs">✓</span>';
+                } else if (t.status === 'serving') {
+                    btnClass = 'bg-emerald-50 text-emerald-900 border-emerald-300';
+                    badgeText = t.counterId ? `ช่อง ${t.counterId}` : 'กำลังเรียก';
+                    iconHTML = '<span class="text-xs">🟢</span>';
+                } else if (t.status === 'waiting') {
+                    btnClass = 'bg-amber-50 text-amber-900 border-amber-300';
+                    badgeText = 'รอเรียก';
+                    iconHTML = '<span class="text-xs">🟡</span>';
+                } else if (t.status === 'hold') {
+                    btnClass = 'bg-purple-50 text-purple-900 border-purple-300';
+                    badgeText = 'พักคิว';
+                    iconHTML = '<span class="text-xs">🟣</span>';
+                } else if (isCompletedToday) {
+                    btnClass = 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100';
+                    badgeText = 'เสร็จสิ้น';
+                    iconHTML = '<span class="text-xs" title="ผ่านการเรียกและให้บริการแล้วเสร็จ">🔴</span>';
+                } else {
+                    btnClass = 'bg-white text-navy-900 border-skybrand-200 hover:bg-skybrand-50 hover:border-skybrand-400';
+                    badgeText = 'ว่าง';
+                }
+
+                gridHTML.push(`
+                    <button
+                        type="button"
+                        onclick="handleMobileTicketTap(${num})"
+                        class="rounded-2xl border p-2.5 flex flex-col items-center justify-center gap-1 transition-all shadow-2xs ${btnClass}"
+                    >
+                        <div class="w-full flex items-center justify-between px-0.5 min-h-[16px]">
+                            ${iconHTML || '<span></span>'}
+                            <span class="text-[10px] font-bold opacity-85">${escapeHTML(badgeText)}</span>
+                        </div>
+                        <span class="font-display font-black text-xl sm:text-2xl tabular-nums leading-none py-0.5">${num}</span>
+                    </button>
+                `);
+            }
+
+            return `
+                <section class="max-w-4xl mx-auto px-4 py-6 space-y-5">
+                    <div class="bg-white rounded-3xl border border-skybrand-200 p-5 shadow-2xs space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-navy-900">
+                                    จุดจ่ายบัตรคิว (มือถือเจ้าหน้าที่)
+                                </h1>
+                                <p class="text-xs sm:text-sm text-slate-500">
+                                    บัตรกระดาษหมายเลข 1–50 • คิวที่ผ่านการให้บริการแล้วเสร็จจะแสดงเป็นสีแดงพร้อมไอคอน 🔴
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs font-extrabold">
+                                <span class="px-3 py-1 rounded-full bg-skybrand-50 text-skybrand-800 border border-skybrand-200 tabular-nums">ว่าง ${availableCount}</span>
+                                <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 tabular-nums">รอ ${waitingCount}</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 tabular-nums">เรียก ${servingCount}</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <button
+                                type="button"
+                                onclick="setMobileServiceType('normal')"
+                                class="py-3 px-4 rounded-2xl text-sm font-extrabold border transition-all ${uiState.mobileServiceType === 'normal' ? 'bg-navy-800 text-white border-navy-900 shadow-xs' : 'bg-skybrand-50/60 text-navy-800 border-skybrand-200'}"
+                            >
+                                บริการทั่วไป (ช่อง 1–8)
+                            </button>
+                            <button
+                                type="button"
+                                onclick="setMobileServiceType('special')"
+                                class="py-3 px-4 rounded-2xl text-sm font-extrabold border transition-all ${uiState.mobileServiceType === 'special' ? 'bg-amber-500 text-white border-amber-600 shadow-xs' : 'bg-amber-50/70 text-amber-900 border-amber-200'}"
+                            >
+                                ช่องทางพิเศษ (ช่อง 9)
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">ระบุช่องบริการปลายทาง (ถ้ามี)</label>
+                                <select
+                                    onchange="uiState.mobileTargetCounter = this.value; if (this.value === '9') uiState.mobileServiceType = 'special';"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-skybrand-200 text-sm font-bold text-navy-900 bg-white"
+                                >
+                                    <option value="">-- จ่ายคิวอัตโนมัติตามลำดับ --</option>
+                                    ${COUNTERS_CONFIG.map(c => `
+                                        <option value="${c.id}" ${String(uiState.mobileTargetCounter) === String(c.id) ? 'selected' : ''}>
+                                            ${escapeHTML(formatCounterDestination(c.id))}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+                                <input
+                                    type="text"
+                                    value="${escapeHTML(uiState.mobileNote)}"
+                                    oninput="uiState.mobileNote = this.value"
+                                    placeholder="เช่น ยื่นแบบ ภ.ง.ด.90 / ขอคำปรึกษา"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-skybrand-200 text-sm font-medium text-navy-900"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-skybrand-100">
+                            <div class="text-sm font-bold text-navy-900">
+                                หมายเลขที่เลือก:
+                                <span class="font-display font-black text-xl text-skybrand-700 tabular-nums ml-1">
+                                    ${uiState.mobileSelectedNumber ? uiState.mobileSelectedNumber : '-'}
+                                </span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button
+                                    type="button"
+                                    onclick="recycleDayTicketsConfirm()"
+                                    class="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-skybrand-100 hover:bg-skybrand-200 text-skybrand-800 border border-skybrand-300 transition-colors"
+                                >
+                                    ♻️ วนบัตรใช้ซ้ำ
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick="issueSelectedTicket()"
+                                    class="px-6 py-3 rounded-2xl font-display font-extrabold text-sm sm:text-base bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all"
+                                >
+                                    ✓ ยืนยันจ่ายบัตรคิว
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl border border-skybrand-200 p-4 sm:p-5 shadow-2xs space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 font-semibold">
+                            <span>แตะหมายเลขที่ว่างเพื่อเลือก หรือแตะหมายเลขที่กำลังใช้งานเพื่อคืนบัตร</span>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <span>⬜ ว่าง</span>
+                                <span>🟡 รอเรียก</span>
+                                <span>🟢 กำลังเรียก</span>
+                                <span class="text-rose-700 font-bold">🔴 เสร็จสิ้นแล้ว</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                            ${gridHTML.join('')}
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        function exportLogsToCSV(filteredLogs, labelSuffix) {
+            const headers = [
+                'ลำดับ',
+                'หมายเลขบัตร',
+                'ประเภทบริการ',
+                'ช่องปลายทาง',
+                'ช่องที่ให้บริการ',
+                'หมายเหตุ',
+                'เวลาออกบัตร',
+                'เวลาที่เรียก',
+                'เวลาเสร็จสิ้น',
+                'สถานะ',
+                'วันที่'
+            ];
+
+            const statusThaiMap = {
+                waiting: 'รอเรียก',
+                serving: 'กำลังเรียก',
+                hold: 'พักคิว',
+                completed: 'เสร็จสิ้นแล้ว',
+                returned: 'คืนบัตร',
+                recycled: 'วนบัตร'
+            };
+
+            const rows = filteredLogs.map((item, idx) => [
+                idx + 1,
+                item.ticketNumber,
+                item.type === 'special' ? 'ช่องทางพิเศษ' : 'บริการทั่วไป',
+                item.targetCounterId ? formatCounterDestination(item.targetCounterId) : '-',
+                item.servedCounterId ? formatCounterDestination(item.servedCounterId) : '-',
+                item.note || '',
+                formatThaiDateTime(item.issuedAt),
+                formatThaiDateTime(item.calledAt),
+                formatThaiDateTime(item.completedAt),
+                statusThaiMap[item.status] || item.status || '-',
+                item.dateStr || ''
+            ]);
+
+            const csvContent = '\uFEFF' + [headers, ...rows]
+                .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `buayai-rd-queue-report-${labelSuffix}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('ดาวน์โหลดไฟล์รายงาน CSV เรียบร้อยแล้ว', 'success');
+        }
+
+        function renderReportHTML() {
+            const isDaily = uiState.reportTab === 'daily';
+            const filtered = issueLogs.filter(item => {
+                if (!item) return false;
+                if (isDaily) {
+                    return item.dateStr === uiState.selectedReportDate;
+                }
+                return item.monthStr === uiState.selectedReportMonth;
+            });
+
+            const totalIssued = filtered.length;
+            const completedCount = filtered.filter(i => i.status === 'completed').length;
+            const waitingOrServingCount = filtered.filter(i => i.status === 'waiting' || i.status === 'serving' || i.status === 'hold').length;
+            const specialCount = filtered.filter(i => i.type === 'special' || Number(i.targetCounterId) === 9 || Number(i.servedCounterId) === 9).length;
+
+            const rowsHTML = filtered.length === 0
+                ? `<tr><td colspan="7" class="py-8 text-center text-sm text-slate-500">ไม่พบข้อมูลประวัติการออกบัตรคิวในช่วงเวลาที่เลือก</td></tr>`
+                : filtered.map((log, index) => {
+                    const isCompleted = log.status === 'completed';
+                    const rowCls = isCompleted
+                        ? 'bg-rose-50/90 text-rose-900 font-semibold border-b border-rose-200'
+                        : 'bg-white text-slate-700 border-b border-skybrand-100 hover:bg-skybrand-50/40';
+
+                    const statusBadge = isCompleted
+                        ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-300">🔴 เสร็จสิ้นแล้ว</span>'
+                        : log.status === 'serving'
+                            ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">🟢 กำลังเรียก</span>'
+                            : log.status === 'hold'
+                                ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800">🟣 พักคิว</span>'
+                                : '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">🟡 รอเรียก</span>';
+
+                    const counterDisplay = log.servedCounterId
+                        ? formatCounterDestination(log.servedCounterId)
+                        : (log.targetCounterId ? formatCounterDestination(log.targetCounterId) : '-');
+
+                    return `
+                        <tr class="${rowCls}">
+                            <td class="py-3 px-3 text-xs tabular-nums">${index + 1}</td>
+                            <td class="py-3 px-3 font-display font-black text-base tabular-nums">${isCompleted ? '🔴 ' : ''}${escapeHTML(log.ticketNumber)}</td>
+                            <td class="py-3 px-3 text-xs">${log.type === 'special' ? 'ช่องทางพิเศษ' : 'บริการทั่วไป'}</td>
+                            <td class="py-3 px-3 text-xs">${escapeHTML(counterDisplay)}</td>
+                            <td class="py-3 px-3 text-xs">${escapeHTML(log.note || '-')}</td>
+                            <td class="py-3 px-3 text-xs tabular-nums">${escapeHTML(formatThaiTime(log.issuedAt))}</td>
+                            <td class="py-3 px-3 text-xs">${statusBadge}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            const filterSuffix = isDaily ? uiState.selectedReportDate : uiState.selectedReportMonth;
+
+            return `
+                <section class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+                    <div class="bg-white rounded-3xl border border-skybrand-200 p-5 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-navy-900">
+                                รายงานการออกบัตรคิวและการให้บริการ
+                            </h1>
+                            <p class="text-xs sm:text-sm text-slate-500">
+                                คิวที่ผ่านการเรียกและให้บริการเสร็จสิ้นแล้วจะแสดงเป็นสีแดงพร้อมไอคอนกำกับ
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                onclick="uiState.reportTab = 'daily'; renderApp();"
+                                class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border ${isDaily ? 'bg-navy-800 text-white border-navy-900' : 'bg-white text-navy-800 border-skybrand-200'}"
+                            >
+                                รายงานประจำวัน
+                            </button>
+                            <button
+                                type="button"
+                                onclick="uiState.reportTab = 'monthly'; renderApp();"
+                                class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border ${!isDaily ? 'bg-navy-800 text-white border-navy-900' : 'bg-white text-navy-800 border-skybrand-200'}"
+                            >
+                                รายงานประจำเดือน
+                            </button>
+                            ${isDaily
+                                ? `<input type="date" value="${escapeHTML(uiState.selectedReportDate)}" onchange="uiState.selectedReportDate = this.value; renderApp();" class="px-3 py-2 rounded-xl border border-skybrand-200 text-xs sm:text-sm font-bold" />`
+                                : `<input type="month" value="${escapeHTML(uiState.selectedReportMonth)}" onchange="uiState.selectedReportMonth = this.value; renderApp();" class="px-3 py-2 rounded-xl border border-skybrand-200 text-xs sm:text-sm font-bold" />`
+                            }
+                            <button
+                                type="button"
+                                onclick='exportLogsToCSV(${JSON.stringify(filtered)}, ${JSON.stringify(filterSuffix)})'
+                                class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"
+                            >
+                                ⬇ ดาวน์โหลด CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-2xl border border-skybrand-200 p-4 shadow-2xs">
+                            <div class="text-xs font-bold text-slate-500">บัตรที่ออกทั้งหมด</div>
+                            <div class="font-display font-black text-3xl text-navy-900 tabular-nums mt-1">${totalIssued}</div>
+                        </div>
+                        <div class="bg-rose-50 rounded-2xl border border-rose-200 p-4 shadow-2xs">
+                            <div class="text-xs font-bold text-rose-700">🔴 เสร็จสิ้นบริการแล้ว</div>
+                            <div class="font-display font-black text-3xl text-rose-800 tabular-nums mt-1">${completedCount}</div>
+                        </div>
+                        <div class="bg-amber-50 rounded-2xl border border-amber-200 p-4 shadow-2xs">
+                            <div class="text-xs font-bold text-amber-800">กำลังดำเนินการ / รอเรียก</div>
+                            <div class="font-display font-black text-3xl text-amber-900 tabular-nums mt-1">${waitingOrServingCount}</div>
+                        </div>
+                        <div class="bg-skybrand-50 rounded-2xl border border-skybrand-200 p-4 shadow-2xs">
+                            <div class="text-xs font-bold text-skybrand-800">ช่องทางพิเศษ (ช่อง 9)</div>
+                            <div class="font-display font-black text-3xl text-skybrand-900 tabular-nums mt-1">${specialCount}</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl border border-skybrand-200 overflow-hidden shadow-2xs">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-skybrand-50 border-b border-skybrand-200 text-xs font-extrabold text-navy-900">
+                                        <th class="py-3 px-3">#</th>
+                                        <th class="py-3 px-3">หมายเลขคิว</th>
+                                        <th class="py-3 px-3">ประเภทบริการ</th>
+                                        <th class="py-3 px-3">ช่องบริการ</th>
+                                        <th class="py-3 px-3">หมายเหตุ</th>
+                                        <th class="py-3 px-3">เวลาออกบัตร</th>
+                                        <th class="py-3 px-3">สถานะ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rowsHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        function saveAllSettingsFromForm() {
+            const urlInput = document.getElementById('settingsAppsScriptUrl');
+            const voiceModeInput = document.getElementById('settingsVoiceMode');
+            const voiceRateInput = document.getElementById('settingsVoiceRate');
+            const voiceVolumeInput = document.getElementById('settingsVoiceVolume');
+            const voiceRepeatInput = document.getElementById('settingsVoiceRepeat');
+            const chimeInput = document.getElementById('settingsChimeEnabled');
+
+            if (urlInput) {
+                const val = String(urlInput.value || '').trim();
+                appSettings.appsScriptUrl = val || DEFAULT_APPS_SCRIPT_URL;
+            }
+            if (voiceModeInput) {
+                appSettings.voice.mode = voiceModeInput.value || 'auto';
+            }
+            if (voiceRateInput) {
+                appSettings.voice.rate = Math.min(1.4, Math.max(0.65, Number(voiceRateInput.value || 0.96)));
+            }
+            if (voiceVolumeInput) {
+                appSettings.voice.volume = Math.min(1, Math.max(0.1, Number(voiceVolumeInput.value || 1)));
+            }
+            if (voiceRepeatInput) {
+                appSettings.voice.repeatCount = Math.min(3, Math.max(1, Number(voiceRepeatInput.value || 1)));
+            }
+            if (chimeInput) {
+                appSettings.voice.chimeEnabled = Boolean(chimeInput.checked);
+            }
+
+            COUNTERS_CONFIG.forEach(c => {
+                const el = document.getElementById(`settingsStaffCounter_${c.id}`);
+                if (el) {
+                    const nameVal = String(el.value || '').trim();
+                    appSettings.counterStaff[c.id] = nameVal;
+                    if (appState.counters[c.id]) {
+                        appState.counters[c.id].staffName = nameVal;
+                    }
+                }
+            });
+
+            persistLocalCache();
+            renderApp();
+            showToast('บันทึกการตั้งค่าทั้งหมดเรียบร้อยแล้ว', 'success');
+            syncStateToSheet(null, null, null);
+        }
+
+        function renderSettingsHTML() {
+            const thaiVoices = refreshThaiVoices();
+            const voiceAvailabilityText = thaiVoices.length > 0
+                ? `พบเสียงพูดภาษาไทยในเครื่อง ${thaiVoices.length} เสียง (${escapeHTML(thaiVoices[0].name || 'th-TH')})`
+                : 'ไม่พบเสียงพูดภาษาไทยในเครื่องโดยตรง (ระบบจะใช้เสียงพูดภาษาไทยสำรองให้อัตโนมัติในโหมดอัตโนมัติหรือเสียงสำรอง)';
+
+            const staffInputsHTML = COUNTERS_CONFIG.map(c => {
+                const currentVal = (appSettings.counterStaff && appSettings.counterStaff[c.id])
+                    || (appState.counters[c.id] && appState.counters[c.id].staffName)
+                    || '';
+                return `
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">
+                            ${escapeHTML(formatCounterDestination(c.id))}
+                        </label>
+                        <input
+                            type="text"
+                            id="settingsStaffCounter_${c.id}"
+                            value="${escapeHTML(currentVal)}"
+                            placeholder="ระบุชื่อเจ้าหน้าที่"
+                            class="w-full px-3 py-2 rounded-xl border border-skybrand-200 text-sm font-medium text-navy-900"
+                        />
+                    </div>
+                `;
+            }).join('');
+
+            const initialPreviewPhrase = buildAnnouncementText(uiState.previewTicketNumber, uiState.previewCounterId);
+
+            return `
+                <section class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+                    <div class="bg-white rounded-3xl border border-skybrand-200 p-6 shadow-2xs space-y-6">
+                        <div>
+                            <h1 class="font-display font-extrabold text-2xl text-navy-900">ตั้งค่าระบบและพรีวิวเสียงประกาศภาษาไทย</h1>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                                กำหนดการเชื่อมต่อ Google Sheets รายชื่อเจ้าหน้าที่ประจำช่องบริการ 1–9 และทดสอบเสียงประกาศภาษาไทย
+                            </p>
+                        </div>
+
+                        <div class="space-y-2 pt-3 border-t border-skybrand-100">
+                            <label for="settingsAppsScriptUrl" class="block text-xs font-bold text-slate-700">
+                                URL ของ Google Apps Script Web App (/exec)
+                            </label>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input
+                                    type="url"
+                                    id="settingsAppsScriptUrl"
+                                    value="${escapeHTML(appSettings.appsScriptUrl)}"
+                                    class="flex-1 px-3.5 py-2.5 rounded-xl border border-skybrand-200 text-xs sm:text-sm font-mono text-navy-900"
+                                />
+                                <button
+                                    type="button"
+                                    onclick="saveAllSettingsFromForm(); fetchSnapshotFromSheet(false);"
+                                    class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-skybrand-600 hover:bg-skybrand-700 text-white shrink-0"
+                                >
+                                    ทดสอบเชื่อมต่อ Sheet
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 pt-4 border-t border-skybrand-100">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <h2 class="font-display font-extrabold text-base text-navy-900">การตั้งค่าเสียงประกาศภาษาไทย</h2>
+                                <span class="text-xs font-semibold text-skybrand-800 bg-skybrand-50 px-3 py-1 rounded-full border border-skybrand-200">
+                                    ${voiceAvailabilityText}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div>
+                                    <label for="settingsVoiceMode" class="block text-xs font-bold text-slate-600 mb-1">โหมดการออกเสียงภาษาไทย</label>
+                                    <select
+                                        id="settingsVoiceMode"
+                                        onchange="appSettings.voice.mode = this.value; persistLocalCache();"
+                                        class="w-full px-3 py-2 rounded-xl border border-skybrand-200 text-sm font-bold bg-white"
+                                    >
+                                        <option value="auto" ${appSettings.voice.mode === 'auto' ? 'selected' : ''}>อัตโนมัติ (เสียงในเครื่อง + สำรอง)</option>
+                                        <option value="speech" ${appSettings.voice.mode === 'speech' ? 'selected' : ''}>เสียงในเครื่องเท่านั้น (th-TH)</option>
+                                        <option value="online" ${appSettings.voice.mode === 'online' ? 'selected' : ''}>เสียงสำรองภาษาไทย (ออนไลน์)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="settingsVoiceRate" class="block text-xs font-bold text-slate-600 mb-1">ความเร็วเสียงพูด (0.7–1.3)</label>
+                                    <input
+                                        type="number"
+                                        step="0.05"
+                                        min="0.7"
+                                        max="1.3"
+                                        id="settingsVoiceRate"
+                                        value="${escapeHTML(appSettings.voice.rate)}"
+                                        class="w-full px-3 py-2 rounded-xl border border-skybrand-200 text-sm font-bold tabular-nums"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label for="settingsVoiceVolume" class="block text-xs font-bold text-slate-600 mb-1">ระดับเสียง (0.1–1.0)</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        min="0.1"
+                                        max="1.0"
+                                        id="settingsVoiceVolume"
+                                        value="${escapeHTML(appSettings.voice.volume)}"
+                                        class="w-full px-3 py-2 rounded-xl border border-skybrand-200 text-sm font-bold tabular-nums"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label for="settingsVoiceRepeat" class="block text-xs font-bold text-slate-600 mb-1">จำนวนครั้งที่ประกาศซ้ำ</label>
+                                    <select
+                                        id="settingsVoiceRepeat"
+                                        class="w-full px-3 py-2 rounded-xl border border-skybrand-200 text-sm font-bold bg-white"
+                                    >
+                                        <option value="1" ${Number(appSettings.voice.repeatCount) === 1 ? 'selected' : ''}>1 ครั้ง</option>
+                                        <option value="2" ${Number(appSettings.voice.repeatCount) === 2 ? 'selected' : ''}>2 ครั้ง</option>
+                                        <option value="3" ${Number(appSettings.voice.repeatCount) === 3 ? 'selected' : ''}>3 ครั้ง</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <label class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-navy-900 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="settingsChimeEnabled"
+                                    ${appSettings.voice.chimeEnabled ? 'checked' : ''}
+                                    class="w-4 h-4 rounded border-skybrand-300 text-skybrand-600"
+                                />
+                                <span>เล่นเสียงกระดิ่งนำก่อนประกาศเสียงภาษาไทย</span>
+                            </label>
+
+                            <div class="rounded-3xl bg-skybrand-50/80 border border-skybrand-200 p-5 space-y-4">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <h3 class="font-display font-extrabold text-base text-navy-900">
+                                            หน้าพรีวิวทดสอบเสียงประกาศภาษาไทย
+                                        </h3>
+                                        <p class="text-xs text-slate-600">
+                                            ทดลองฟังเสียงกระดิ่งและเสียงพูดภาษาไทยก่อนเปิดใช้งานจริง
+                                        </p>
+                                    </div>
+                                    <span id="voicePreviewStatusText" class="px-3 py-1 rounded-full text-xs font-bold bg-white text-skybrand-800 border border-skybrand-200">
+                                        ${escapeHTML(uiState.previewStatusText)}
+                                    </span>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">หมายเลขคิวตัวอย่าง (1–50)</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="${TOTAL_TICKETS}"
+                                            id="previewTicketInput"
+                                            value="${escapeHTML(uiState.previewTicketNumber)}"
+                                            oninput="uiState.previewTicketNumber = Number(this.value || 1); const p = document.getElementById('previewCustomPhraseInput'); if (p) p.value = buildAnnouncementText(uiState.previewTicketNumber, uiState.previewCounterId); setPreviewStatus(uiState.previewStatusText, buildAnnouncementText(uiState.previewTicketNumber, uiState.previewCounterId));"
+                                            class="w-full px-3.5 py-2 rounded-xl border border-skybrand-200 text-sm font-bold bg-white tabular-nums"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">ช่องบริการตัวอย่าง (1–9)</label>
+                                        <select
+                                            id="previewCounterSelect"
+                                            onchange="uiState.previewCounterId = Number(this.value || 1); const p = document.getElementById('previewCustomPhraseInput'); if (p) p.value = buildAnnouncementText(uiState.previewTicketNumber, uiState.previewCounterId); setPreviewStatus(uiState.previewStatusText, buildAnnouncementText(uiState.previewTicketNumber, uiState.previewCounterId));"
+                                            class="w-full px-3.5 py-2 rounded-xl border border-skybrand-200 text-sm font-bold bg-white"
+                                        >
+                                            ${COUNTERS_CONFIG.map(c => `
+                                                <option value="${c.id}" ${Number(uiState.previewCounterId) === c.id ? 'selected' : ''}>
+                                                    ${escapeHTML(formatCounterDestination(c.id))}
+                                                </option>
+                                            `).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="previewCustomPhraseInput" class="block text-xs font-bold text-slate-600 mb-1">
+                                        ข้อความภาษาไทยที่จะออกเสียง (สามารถแก้ไขเพื่อทดลองฟังได้)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="previewCustomPhraseInput"
+                                        value="${escapeHTML(uiState.previewLastSpokenText || initialPreviewPhrase)}"
+                                        oninput="setPreviewStatus(uiState.previewStatusText, this.value)"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-skybrand-200 text-sm font-bold bg-white text-navy-900"
+                                    />
+                                    <div class="mt-1.5 text-xs text-slate-600">
+                                        ประโยคที่ระบบเตรียมอ่าน: <span id="voicePreviewSpokenScript" class="font-bold text-navy-900">${escapeHTML(uiState.previewLastSpokenText || initialPreviewPhrase)}</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-2.5">
+                                    <button
+                                        type="button"
+                                        onclick="runPreviewFromStudio(document.getElementById('previewTicketInput').value, document.getElementById('previewCounterSelect').value, document.getElementById('previewCustomPhraseInput').value)"
+                                        class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors"
+                                    >
+                                        ▶ เล่นพรีวิวเสียงภาษาไทย
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onclick="stopVoicePreview()"
+                                        class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 transition-colors"
+                                    >
+                                        ■ หยุดเสียง
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="space-y-3 pt-4 border-t border-skybrand-100">
                             <h2 class="font-display font-extrabold text-base text-navy-900">รายชื่อเจ้าหน้าที่ประจำช่องบริการ 1–9</h2>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -2146,9 +2759,6 @@
             `;
         }
 
-        /* =====================================================================
-         * การเรนเดอร์หลักและรอบการซิงค์ข้อมูลอัตโนมัติ
-         * ===================================================================== */
         function renderApp() {
             try {
                 renderTopBar();
@@ -2185,7 +2795,6 @@
             }
         }
 
-        // ซิงค์ข้อมูลเริ่มต้นและตั้งรอบดึงข้อมูลอัตโนมัติทุก 3.5 วินาที
         renderApp();
         fetchSnapshotFromSheet(true).then(ok => {
             if (ok) renderApp();
